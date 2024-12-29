@@ -12,7 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/travisjeffery/jocko/jocko"
 	"github.com/travisjeffery/jocko/jocko/config"
-	"github.com/travisjeffery/jocko/log"
 	"github.com/travisjeffery/jocko/protocol"
 )
 
@@ -90,7 +89,11 @@ func main() {
 		}
 		i := 0
 		for msg := range partition.Messages() {
-			fmt.Printf("msg partition [%d] offset [%d]\n", msg.Partition, msg.Offset)
+			logrus.WithFields(logrus.Fields{
+				"partition": msg.Partition,
+				"offset":    msg.Offset,
+			}).Info("received message")
+
 			check := pmap[partitionID][i]
 			if string(msg.Value) != check.message {
 				logrus.WithFields(logrus.Fields{
@@ -104,19 +107,29 @@ func main() {
 					"offset":    msg.Offset,
 				}).Fatal("msg offsets not equal")
 			}
-			log.Info.Printf("msg is ok: partition: %d: offset: %d", msg.Partition, msg.Offset)
+
+			logrus.WithFields(logrus.Fields{
+				"partition": msg.Partition,
+				"offset":    msg.Offset,
+			}).Info("message is ok")
+
 			i++
 			checked++
-			fmt.Printf("i: %d, len: %d\n", i, len(pmap[partitionID]))
+
+			logrus.WithFields(logrus.Fields{
+				"i":   i,
+				"len": len(pmap[partitionID]),
+			}).Debug("message processing progress")
+
 			if i == len(pmap[partitionID]) {
 				totalChecked += checked
-				fmt.Println("checked partition:", partitionID)
+				logrus.WithField("partition", partitionID).Info("finished checking partition")
 				if err = consumer.Close(); err != nil {
 					panic(err)
 				}
 				break
 			} else {
-				fmt.Println("still checking partition:", partitionID)
+				logrus.WithField("partition", partitionID).Debug("still checking partition")
 			}
 		}
 	}
