@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	"github.com/sirupsen/logrus"
 	"github.com/travisjeffery/jocko/jocko"
 	"github.com/travisjeffery/jocko/jocko/config"
 	"github.com/travisjeffery/jocko/log"
@@ -92,10 +93,16 @@ func main() {
 			fmt.Printf("msg partition [%d] offset [%d]\n", msg.Partition, msg.Offset)
 			check := pmap[partitionID][i]
 			if string(msg.Value) != check.message {
-				log.Fatal.Printf("msg values not equal: partition: %d: offset: %d", msg.Partition, msg.Offset)
+				logrus.WithFields(logrus.Fields{
+					"partition": msg.Partition,
+					"offset":    msg.Offset,
+				}).Fatal("msg values not equal")
 			}
 			if msg.Offset != check.offset {
-				log.Fatal.Printf("msg offsets not equal: partition: %d: offset: %d", msg.Partition, msg.Offset)
+				logrus.WithFields(logrus.Fields{
+					"partition": msg.Partition,
+					"offset":    msg.Offset,
+				}).Fatal("msg offsets not equal")
 			}
 			log.Info.Printf("msg is ok: partition: %d: offset: %d", msg.Partition, msg.Offset)
 			i++
@@ -117,7 +124,7 @@ func main() {
 }
 
 func setup() (*jocko.Server, func()) {
-	c, cancel := jocko.NewTestServer(&testing.T{}, func(cfg *config.Config) {
+	c, _ := jocko.NewTestServer(&testing.T{}, func(cfg *config.Config) {
 		cfg.Bootstrap = true
 		cfg.BootstrapExpect = 1
 		cfg.StartAsLeader = true
@@ -152,7 +159,6 @@ func setup() (*jocko.Server, func()) {
 	}
 
 	return c, func() {
-		cancel()
 		c.Shutdown()
 		os.RemoveAll(logDir)
 	}
