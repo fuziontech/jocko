@@ -21,7 +21,6 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
-	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v0.0.1
 	github.com/stretchr/testify v1.8.4
 	github.com/tj/go-gracefully v0.0.0-20141227061038-005c1d102f1b
